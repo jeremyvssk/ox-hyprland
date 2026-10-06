@@ -1,0 +1,27 @@
+/* ═══════════════════════════════════════════════════════════════════
+   rofi's DEFAULT config — the one used when nothing passes -theme.
+
+   It used to carry its own full copy of the old #101667 navy theme,
+   which meant the desktop had two rofis: the launcher on SUPER+S/R
+   (themed, teal) and everything else (unthemed, navy). Any script that
+   ran a bare `rofi -dmenu` got the navy one — the Wi-Fi password prompt
+   did exactly that until the panel grew its own password field.
+
+   There is now ONE look. This file holds only the behaviour that is not
+   about appearance, and points at torbik-bar.rasi for the rest, so a
+   palette change happens in one file and reaches every rofi on the
+   system.
+   ═══════════════════════════════════════════════════════════════════ */
+
+configuration {
+    modi:                "drun,run,window";
+    show-icons:          true;
+    icon-theme:          "Papirus-Dark";
+    font:                "JetBrainsMono Nerd Font 12";
+    drun-display-format: "{name}";
+    display-drun:        "";
+    display-run:         "";
+    display-window:      "";
+}
+
+@theme "torbik-bar"

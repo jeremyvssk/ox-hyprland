@@ -1,0 +1,112 @@
+# ═══════════════════════════════════════════════════════════════
+# TORBIK NOTIFICATIONS — G2 "Gunmetal Teal", accent A2 aqua steel
+#
+# WHY THIS FILE EXISTS (BUG-2)
+# Nothing owned org.freedesktop.Notifications. The name was registered
+# for D-Bus *activation* by /usr/share/dbus-1/services/
+# org.kde.plasma.Notifications.service, whose Exec is
+#     /usr/bin/plasma_waitforname org.freedesktop.Notifications
+# which blocks until plasmashell provides the name. Under Hyprland
+# plasmashell never runs, so notify-send did not fail -- it HUNG,
+# forever (measured: exit 124 under `timeout`). Every script that tried
+# to report success or failure wedged instead.
+#
+# dunst was already installed and simply never started. It claims the
+# name directly at launch, so the Plasma activation entry never fires.
+# Started from hypr/conf/autostart.conf.
+#
+# Palette matches torbik/waybar/style.css and eww/eww.scss.
+# ═══════════════════════════════════════════════════════════════
+
+[global]
+    monitor = 0
+    follow = none
+
+    width = (210, 380)
+    height = (0, 260)
+    origin = bottom-right
+    # 46px of reserved bar (12 margin + 34 rail) + 12px window frame.
+    offset = (12, 12)
+    scale = 0
+    notification_limit = 4
+
+    progress_bar = true
+    progress_bar_height = 4
+    progress_bar_frame_width = 0
+    progress_bar_min_width = 120
+    progress_bar_max_width = 260
+    progress_bar_corner_radius = 2
+
+    indicate_hidden = yes
+    transparency = 0
+    separator_height = 0
+    padding = 9
+    horizontal_padding = 12
+    text_icon_padding = 10
+    frame_width = 1
+    gap_size = 6
+    sort = yes
+
+    font = JetBrainsMono Nerd Font 10
+    line_height = 0
+    markup = full
+    format = "<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = 60
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = no
+
+    enable_recursive_icon_lookup = true
+    icon_theme = "Papirus-Dark, Adwaita"
+    icon_position = left
+    min_icon_size = 0
+    max_icon_size = 28
+
+    sticky_history = yes
+    history_length = 20
+    corner_radius = 10
+    corners = all
+
+    browser = /usr/bin/xdg-open
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    ignore_dbusclose = false
+    force_xwayland = false
+
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+# Low: recedes. Same ground, muted text, no accent.
+[urgency_low]
+    background = "#0A1615E6"
+    foreground = "#A7BAB6"
+    frame_color = "#1E3230"
+    highlight = "#4E8C82"
+    timeout = 5
+
+[urgency_normal]
+    background = "#0A1615F2"
+    foreground = "#E6EFEC"
+    frame_color = "#263A38"
+    highlight = "#6FC2B4"
+    timeout = 6
+
+# Critical: 10s, NOT 0. `timeout = 0` means "stays until dismissed",
+# and every failure toast on this desktop is -u critical -- a failed
+# bluetooth connect, a failed forget, a battery warning. So a toast
+# nobody clicked sat on the screen for the rest of the session, which
+# is what "the notifications stay forever" was. Ten seconds is long
+# enough to read a failure twice and short enough that it leaves on
+# its own.
+[urgency_critical]
+    background = "#0A1615F7"
+    foreground = "#E6EFEC"
+    frame_color = "#6FC2B4"
+    highlight = "#6FC2B4"
+    timeout = 10

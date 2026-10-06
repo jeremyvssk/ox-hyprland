@@ -1,0 +1,118 @@
+/* ═══════════════════════════════════════════════════════════════
+   TORBIK SESSION MENU — no boxes.
+
+   The boxes are gone deliberately. A wlogout button is a 190px cell
+   with an icon and a word in it; giving that cell a fill, a border and
+   a radius turned four icons into four cards, and cards are the one
+   thing this desktop does NOT do anywhere else -- the bar is a single
+   pill, the popups are single sheets. Four tiles in a row read as a
+   KDE/GNOME session dialog, which is exactly the look being left
+   behind.
+
+   With no box, the ONLY thing that can carry state is the icon and the
+   word. Both change on hover and on keyboard focus:
+
+     rest    icon --mid   #A7BAB6   label --mid at 78% opacity
+     focus   icon --mid   #A7BAB6   label --ink  #E6EFEC at 100%
+     hover   icon --accent #6FC2B4  label --ink  #E6EFEC at 100%
+
+   The two icon tints are two separate PNG sets (icons/rest and
+   icons/hover) on a common 512 canvas, so the swap costs nothing and
+   cannot shift the layout.
+
+   Both sets were re-normalised: the PNGs shared a canvas size but not
+   an INK size -- measured, lock was 448x512 of drawing and reboot was
+   465x449, so at one background-size the lock rendered 62px tall and
+   the reboot 54px, and with no boxes around them that 15% difference
+   was the most visible thing in the row. Every icon is now trimmed,
+   scaled so its longer side is 440, and re-centred on 512.
+
+   GEOMETRY is not here. wlogout sizes its grid from four absolute
+   pixel margins passed on the command line, and those are computed per
+   monitor by hypr/conf/power-menu.sh -- see that file for why hard
+   numbers here were the bug.
+   ═══════════════════════════════════════════════════════════════ */
+
+* {
+    font-family: "JetBrainsMono Nerd Font", sans-serif;
+    background-image: none;
+    box-shadow: none;
+    outline: none;
+    text-shadow: none;
+    border: none;
+}
+
+/* NOT blurred any more. Blur size 7 / passes 3 (the desktop-wide glass
+   kernel) behind an 80% scrim erased the desktop completely: the menu
+   read as a flat dark wall, which is what "too much blur" meant. Hypr
+   0.54 has no per-layer blur strength -- `layerrule = blur` is on/off
+   only -- so the choice is this kernel or none, and none is right for a
+   full-screen surface. The scrim alone now does the isolating, dropped
+   to 0.72 so the desktop stays legible underneath instead of vanishing.
+   See window-rules.conf: the logout_dialog blur rule is gone. */
+window {
+    background-color: rgba(6, 14, 14, 0.72);
+}
+
+button {
+    color: #A7BAB6;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    opacity: 0.78;
+
+    /* The icon sits in the upper two thirds of the cell and the label
+       hangs under it. padding-top is what reserves the icon's space --
+       there is no image widget here, the icon IS the background. */
+    padding: 100px 0 0 0;
+    background-repeat: no-repeat;
+    background-position: center 30px;
+    background-size: 62px 62px;
+
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
+
+    transition: color 140ms ease, opacity 140ms ease;
+}
+
+/* FOCUS NO LONGER LIGHTS UP. wlogout focuses the first button the
+   moment the menu opens, so a bright focus state meant "Lock" was
+   painted white every single time the menu appeared, with nothing
+   hovered and nothing chosen -- one word pre-selected for you. That
+   read as a bug, not as a keyboard hint.
+
+   The menu is opened by a mouse click on the bar, so the pointer is
+   already the thing driving it; hover is the state that means
+   something. Focus is now identical to rest, and keyboard users still
+   have the l/e/s/r keybinds from `layout`, which act directly and never
+   needed a visible cursor to work. */
+button:focus {
+    color: #A7BAB6;
+    background-color: transparent;
+    opacity: 0.78;
+}
+
+/* Hover is the ONLY lit state: the word goes to --ink and the icon
+   swaps to the accent set below. Listed after :focus so a button that
+   is both focused and hovered lights (CSS order decides here -- both
+   selectors have the same specificity). */
+button:hover,
+button:active,
+button:selected {
+    color: #E6EFEC;
+    background-color: transparent;
+    opacity: 1;
+}
+
+#lock     { background-image: url("icons/rest/lock.png"); }
+#logout   { background-image: url("icons/rest/logout.png"); }
+#shutdown { background-image: url("icons/rest/shutdown.png"); }
+#reboot   { background-image: url("icons/rest/reboot.png"); }
+
+/* Hover only -- see the focus/hover split above. */
+#lock:hover     { background-image: url("icons/hover/lock.png"); }
+#logout:hover   { background-image: url("icons/hover/logout.png"); }
+#shutdown:hover { background-image: url("icons/hover/shutdown.png"); }
+#reboot:hover   { background-image: url("icons/hover/reboot.png"); }

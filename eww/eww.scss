@@ -1,0 +1,179 @@
+// ===============================================================
+// TORBIK PANELS -- G2 "Gunmetal Teal", accent A2 aqua steel
+//
+// BUG-5. These panels were never restyled when the bar moved to
+// glass: they were still on the old rofi-derived navy/orange
+// palette, so clicking wifi, sound, the clock or the sign-out icon
+// dropped a visibly different application out of the bar.
+//
+// They now share the bar's palette and, more importantly, the bar's
+// RULE: the accent appears on state (active device, connected
+// network, panel title) and nowhere else. The old file painted
+// every device name, every SSID and every icon $orange, which is
+// what made it read as loud rather than as a system surface.
+//
+// Panel radius is 14 against the bar island's 10: a larger surface
+// carries a larger corner, and the two still read as one family.
+//
+// IMPORTANT: keep this file ASCII-only. Non-ASCII chars (em dash,
+// arrows, nerd-font glyphs) cause the SCSS compiler to emit
+// @charset "UTF-8", which eww's GTK CSS parser rejects, breaking
+// the entire stylesheet.
+// ===============================================================
+
+$bg:         rgba(12, 24, 24, 0.93);
+$edge:       rgba(190, 220, 216, 0.12);
+$hairline:   rgba(190, 220, 216, 0.09);
+
+// MINT, not aqua steel. Was #6FC2B4 -- hsl(170, 40%, 60%), which is the
+// cyan side of teal and the loudest a colour gets on a near-black ground
+// without being fully saturated. Now hsl(161, 35%, 57%): nine degrees
+// toward green so it reads as mint rather than mint-blue, five points
+// less chroma and three less lightness so it marks state instead of
+// announcing itself. Same value in torbik/waybar/style.css and
+// rofi/torbik-bar.rasi -- one accent, three files, change all three.
+$accent:     #6AB79E;
+$accent-dim: rgba(106, 183, 158, 0.11);
+$accent-hot: rgba(106, 183, 158, 0.20);
+$accent-brd: rgba(106, 183, 158, 0.34);
+
+// C1 colour law, shared with the bar (torbik/waybar/style.css):
+// brightness encodes IMPORTANCE and nothing else. Three greys, one
+// accent. The old set had these at #E1ECE9 / #C3D2CF / #8A9E9B, whose
+// top two sit ~5% apart and were doing double duty as "important" and
+// "connected" at the same time.
+$text:       #A7BAB6;   // --mid : you glance at it
+$bright:     #E6EFEC;   // --ink : you read it
+$muted:      #637875;   // --dim : it is asleep
+$hover:      rgba(167, 186, 182, 0.09);
+
+* {
+    font-family: "JetBrainsMono Nerd Font", sans-serif;
+    font-size: 13px;
+    color: $text;
+}
+
+// The popup window itself must be fully transparent so only the inner
+// panel paints. Without this, GTK paints a grey window background
+// across the full-screen overlay used for click-outside dismissal.
+window {
+    background-color: transparent;
+    background: transparent;
+}
+
+.popup-backdrop {
+    background-color: rgba(0, 0, 0, 0.01);
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    min-width: 4000px;
+    min-height: 4000px;
+
+    &:hover, &:active {
+        background-color: rgba(0, 0, 0, 0.01);
+        background-image: none;
+    }
+}
+
+// Same glass recipe as the bar island: gradient ground, hairline
+// edge, top bevel. Depends on the `layerrule = blur on` entries in
+// hypr/conf/window-rules.conf.
+.panel {
+    background-image: linear-gradient(180deg,
+                      rgba(21, 33, 33, 0.90) 0%,
+                      rgba(10, 22, 21, 0.95) 100%);
+    background-color: $bg;
+    border: 1px solid $edge;
+    border-radius: 14px;
+    padding: 16px 14px;
+    min-width: 360px;
+    box-shadow:
+        inset 0 1px 0 rgba(200, 238, 232, 0.10),
+        0 12px 32px -18px rgba(0, 0, 0, 0.9);
+}
+
+.panel-title {
+    color: $bright;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+// ---- Rows, buttons, the pairing card -------------------------
+// Went with eww's bluetooth-panel on 2026-09-16 -- Bluetooth is
+// quickshell/BluetoothPanel.qml. Nothing left in eww.yuck used them.
+// Copies: backup/eww-bluetooth-20260916/.
+
+// ---- Calendar ------------------------------------------------
+.cal {
+    background-color: transparent;
+    color: $text;
+    padding: 4px 2px;
+    font-size: 13px;
+
+    &.header {
+        color: $bright;
+    }
+
+    &:selected, & :selected {
+        background-color: $accent;
+        color: #0A1615;
+        border-radius: 6px;
+    }
+}
+
+calendar {
+    background-color: transparent;
+    color: $text;
+    padding: 4px 2px;
+}
+
+calendar:selected,
+calendar.button:selected {
+    background-color: $accent;
+    color: #0A1615;
+    border-radius: 6px;
+}
+
+calendar > .header,
+calendar > .day-name,
+calendar > .week-number {
+    color: $muted;
+}
+
+calendar:indeterminate {
+    color: rgba(138, 158, 155, 0.45);
+}
+
+// GTK3 draws the weekday-name row (E T K N R L P) with .highlight, not
+// the selected day. It carries no state, so it must not take the accent
+// -- the accent on this panel means "current", and it is on the
+// selected day only.
+calendar.highlight {
+    color: $muted;
+    font-weight: bold;
+}
+
+.calendar-panel-box {
+    min-width: 320px;
+}
+
+.clocks-row {
+    padding: 2px 2px 6px 2px;
+}
+
+.clock-label {
+    color: $muted;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.clock-time {
+    color: $bright;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+// The launcher's styles went with eww's search-panel on 2026-09-16 --
+// Search is quickshell/SearchPanel.qml. Copies: backup/search-20260916/.

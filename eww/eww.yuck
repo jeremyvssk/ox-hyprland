@@ -1,0 +1,156 @@
+;; ============================================================
+;; Polls
+;;
+;; :initial is not cosmetic. A defpoll has NO value until its first run
+;; returns, and eww renders the window before that -- so opening a panel
+;; logged `Failed to turn `` into a value of type json-value` at the
+;; (for ...) over an as-yet-unset list, and the panel drew its device
+;; list EMPTY for the first frame. Every list poll therefore declares an
+;; empty-but-valid value to start from, and the scalar ones declare the
+;; reading that means "nothing known yet" rather than a blank label.
+;; ============================================================
+
+;; ── NO AUDIO VARS ───────────────────────────────────────────
+;; The Sound panel is Quickshell's since 2026-09-16 (quickshell/SoundPanel.qml).
+;; Its polls, the mic-level deflisten, audio-hfp and audio-restart-arm went
+;; with eww's audio-panel. Copies: backup/eww-audio-20260916/.
+
+;; ── NO LAUNCHER VARS ────────────────────────────────────────
+;; Search is Quickshell's since 2026-09-16 (quickshell/SearchPanel.qml).
+;; search-panel, its widgets and every search-* var went with it; apps.py
+;; stays, as the panel's index. Copies: backup/search-20260916/.
+
+(defpoll cal-day     :interval "60s" :initial "1" "date +%-d")
+(defpoll cal-month   :interval "60s" :initial "1" "date +%-m")
+(defpoll cal-year    :interval "60s" :initial "2026" "date +%Y")
+
+(defpoll time-local  :interval "30s" :initial "--:--" "date +%H:%M")
+(defpoll time-osaka  :interval "30s" :initial "--:--" "TZ=Asia/Tokyo date +%H:%M")
+
+;; ============================================================
+;; Panel reveal
+;;
+;; ONE var, from when four panels lived here and exactly one was ever
+;; open. Calendar is the last of them.
+;;
+;; This is what makes the popups grow DOWNWARD OUT OF THE BAR instead
+;; of flying in from the top of the screen. Hyprland's `slide` layer
+;; animation offsets a layer by its OWN HEIGHT, so a 400px panel whose
+;; final top edge is at y=60 starts at y=-340 -- fully off-screen -- and
+;; travels down across the island on the way in. There is no way to
+;; clip that to the bar: layer animations are not bounded by anything.
+;;
+;; So the window does not move at all any more (`layerrule = noanim`)
+;; and the CONTENT unrolls inside it. The window's top edge is already
+;; pinned 10px under the island, so the first pixel of the panel appears
+;; there and the sheet extends down from it -- which is the "comes out
+;; from under the toolbar" read.
+;; ============================================================
+
+(defvar panel-reveal false)
+
+;; ── NO BLUETOOTH VARS ───────────────────────────────────────
+;; Bluetooth is Quickshell's since 2026-09-16 (quickshell/BluetoothPanel.qml
+;; + Bt.qml + bt-agent.py). bluetooth-panel, its -kb keyboard twin, the bt-*
+;; polls and vars, bluetooth-get/-set.sh, bt-watch.sh and eww's bt-agent.py
+;; went with it. Copies: backup/eww-bluetooth-20260916/.
+
+;; ============================================================
+;; Calendar panel
+;; ============================================================
+
+(defwidget calendar-widget []
+  (box :class "panel calendar-panel-box" :orientation "v" :space-evenly false :spacing 10
+    (box :class "clocks-row" :orientation "h" :space-evenly true :spacing 10
+      (box :class "clock-cell" :orientation "v" :space-evenly false :spacing 2
+        (label :class "clock-label" :text "LOCAL" :xalign 0.5)
+        (label :class "clock-time"  :text time-local :xalign 0.5))
+      (box :class "clock-cell" :orientation "v" :space-evenly false :spacing 2
+        (label :class "clock-label" :text "OSAKA" :xalign 0.5)
+        (label :class "clock-time"  :text time-osaka :xalign 0.5)))
+    (label :class "panel-title" :text "Calendar" :xalign 0)
+    (calendar :class "cal"
+              :show-heading true
+              :show-day-names true
+              :show-details false
+              :day cal-day
+              :month cal-month
+              :year cal-year)))
+
+;; ============================================================
+;; Backdrop (separate fullscreen window so the panel windows
+;; can be small and animate cleanly with slide-from-top)
+;; ============================================================
+
+(defwindow popup-backdrop
+  :monitor 0
+  :namespace "popup-backdrop"
+  :geometry (geometry :x "0px" :y "0px"
+                      :width "100%" :height "100%"
+                      :anchor "top left")
+  :stacking "foreground"
+  :focusable false
+  ;; :timeout, for the same reason every eww button with real work has one, and
+  ;; with the worst consequence of any of them. Without it eww SIGKILLed
+  ;; this handler 200ms in -- inside close_all's roll-up sleep, before
+  ;; the `eww close` that unmaps this very surface. So dismissing a
+  ;; popup by clicking the backdrop left the backdrop itself on screen:
+  ;; 4012x4012, transparent, at layer level `top`, swallowing every
+  ;; click on the desktop while showing nothing at all. See the long
+  ;; note at the top of close-popups.sh for the measurement.
+  ;;
+  ;; close-popups.sh now forks before it does anything, so it is already
+  ;; gone by 200ms and this number is never reached. Both are here on
+  ;; purpose: the fork is the fix, this is what stops the fix's removal
+  ;; from being silent and catastrophic again.
+  (button :class "popup-backdrop"
+          :hexpand true :vexpand true
+          :timeout "10s"
+          :onclick "~/.config/eww/scripts/close-popups.sh"))
+
+;; ============================================================
+;; Popup windows -- dropped from the island.
+;;
+;; The bar is ONE centred island now, so every button that opens a panel
+;; is within ~160 px of screen centre and a centre-anchored panel lands
+;; directly under the thing you clicked. That is why they all share an
+;; anchor: the old top-left / top-right split existed only because the
+;; clock was pinned to the far left of a 3440 px screen and the radios to
+;; the far right, which put a centred panel ~1600 px from its icon.
+;;
+;; eww 0.5.0 ignores :x on a CENTRE anchor (verified: x=0 and x=300 both
+;; render dead-centre), so per-icon alignment is not available -- and is
+;; not wanted here. Every panel sharing one column under the island
+;; is the point.
+;;
+;; :namespace is what lets hypr/conf/*.conf target these. WITHOUT it
+;; eww reports every window as "gtk-layer-shell", which is why the
+;; `layerrule = animation slide top, match:namespace audio-panel`
+;; rules in animations.conf had never actually matched anything.
+;;
+;; :y is measured from BELOW the exclusive zone (the bar reserves 50 px
+;; now that it is 38 tall), so 12 here == a 12 px gap under the island.
+;; THIS NUMBER IS NOT FREE: it is `gaps_out` in hypr/conf/general.conf,
+;; which is also waybar's margin-top. One gap value governs the space
+;; above the bar, below the bar, and around every window and panel --
+;; change it in one place and change it in all three.
+;;
+;; The window itself never animates -- see the panel-reveal block at the
+;; top and the `noanim` layerrules in animations.conf. It is placed once,
+;; 12px under the bar, and the revealer inside it unrolls downward from
+;; that edge.
+;; ============================================================
+
+(defwindow calendar-panel
+  :monitor 0
+  :namespace "calendar-panel"
+  :geometry (geometry :x "0px" :y "12px"
+                      :anchor "top center"
+                      :width "320px")
+  :stacking "overlay"
+  :focusable false
+  (revealer :transition "slideup"
+            :duration "220ms"
+            :reveal panel-reveal
+    (calendar-widget)))
+

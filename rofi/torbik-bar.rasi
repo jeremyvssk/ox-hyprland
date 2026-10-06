@@ -1,0 +1,218 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TORBIK LAUNCHER — the same surface as the bar and the panels
+
+   This file was the last thing on the desktop still wearing the old
+   #101667 navy/lavender palette with a neon-orange selection, and its
+   own comment claimed the orange "matches waybar/eww" — it had not for
+   a long time. Pressing SUPER+S dropped a different application onto a
+   teal-glass desktop.
+
+   ── THE COLOUR LAW (C1), shared with torbik/waybar/style.css and
+      eww/eww.scss ────────────────────────────────────────────────────
+     bright  #E6EFEC   you read it        the entry, the selected app
+     text    #A7BAB6   you glance at it   the list
+     muted   #637875   it is asleep       placeholder, hints
+     accent  #6AB79E   you are here       the selection, and nowhere else
+
+   Exactly one accent, used once: the selected row. The old theme put
+   orange on the prompt AND the selection AND a 1.5px border AND a 4px
+   fake-inset card border on every element, which is why it read as
+   loud rather than as a surface.
+
+   ── GEOMETRY ──────────────────────────────────────────────────────
+   y-offset is measured from BELOW waybar's 50px exclusive zone, the
+   same as the eww panels' :y. So 12 here is the same 12 as
+   `gaps_out` in hypr/conf/general.conf and `margin-top` in
+   torbik/waybar/config.jsonc: one gap value, everywhere. Measured at
+   y-offset 65 the launcher sat at y=115, i.e. 65px below the bar —
+   floating in the middle of nothing.
+
+   Radius 14 matches the eww panels (the bar island is 10: a larger
+   surface carries a larger corner, and they still read as one family).
+
+   Glass depends on `layerrule = blur on, match:namespace rofi` in
+   hypr/conf/window-rules.conf, which is already there.
+   ═══════════════════════════════════════════════════════════════════ */
+
+configuration {
+    modi:               "drun,run,window";
+    show-icons:         true;
+    icon-theme:         "Papirus-Dark";
+    font:               "JetBrainsMono Nerd Font 12";
+    scroll-method:      1;
+    display-drun:       "";
+    display-run:        "";
+    display-window:     "";
+    drun-display-format: "{name}";
+    /* Single click launches, like clicking a row in the eww search panel.
+       These two are ONE setting and must move together. Unbinding
+       me-select-entry alone -- which is how this file shipped from the
+       glass pass -- kills the mouse in rofi completely: nothing selects a
+       row, and me-accept-entry's default (MouseDPrimary) accepts the
+       SELECTED row, so a double click has nothing to act on either.
+       Measured, dmenu mode, clicking row 3 of 5:
+         me-select-entry ""  alone          single -> nothing   double -> nothing
+         both at rofi defaults              single -> selects   double -> row 3
+         the pair below                     single -> row 3     double -> row 3
+       For rofi's stock behaviour (double click to launch) delete both. */
+    me-select-entry:    "";
+    me-accept-entry:    "MousePrimary";
+}
+
+* {
+    panel:      #0C1818ED;
+    field:      #060E0E8C;
+    edge:       #BEDCD81F;
+    hairline:   #BEDCD817;
+    hover:      #BEDCD814;
+
+    accent:     #6AB79EFF;
+    accent-dim: #6AB79E1C;
+    accent-hot: #6AB79E33;
+    accent-brd: #6AB79E57;
+
+    text:       #A7BAB6FF;
+    bright:     #E6EFECFF;
+    muted:      #637875FF;
+
+    background-color: transparent;
+    text-color:       @text;
+}
+
+window {
+    transparency:     "real";
+    location:         north;
+    anchor:           north;
+    width:            600px;
+    x-offset:         0px;
+    y-offset:         12px;
+    padding:          10px;
+    border:           1px;
+    border-color:     @edge;
+    border-radius:    14px;
+    background-color: @panel;
+}
+
+mainbox {
+    spacing:          8px;
+    background-color: transparent;
+    children:         [ inputbar, listview ];
+}
+
+/* ── the search field ──────────────────────────────────────────────
+   A real field, not a caption with a rule under it. The old inputbar
+   was borderless with a 1px bottom edge, which reads as a heading —
+   there was nothing to tell you it was the thing that takes typing. */
+inputbar {
+    background-color: @field;
+    border:           1px;
+    border-color:     @edge;
+    border-radius:    9px;
+    padding:          10px 12px;
+    spacing:          10px;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    text-color:       @muted;
+    background-color: transparent;
+    vertical-align:   0.5;
+}
+
+entry {
+    text-color:        @bright;
+    background-color:  transparent;
+    cursor:            text;
+    placeholder:       "Search";
+    placeholder-color: @muted;
+    vertical-align:    0.5;
+}
+
+/* ── the list ──────────────────────────────────────────────────────
+   Flat rows. The old theme drew every entry as a navy card with a 4px
+   border, so twenty apps meant twenty competing rectangles. */
+listview {
+    background-color: transparent;
+    columns:          1;
+    lines:            7;
+    spacing:          2px;
+    padding:          2px 0px 0px 0px;
+    scrollbar:        true;
+    fixed-height:     false;
+    dynamic:          true;
+}
+
+scrollbar {
+    background-color: transparent;
+    handle-color:     @edge;
+    handle-width:     4px;
+    border-radius:    4px;
+    padding:          0px 0px 0px 6px;
+}
+
+element {
+    background-color: transparent;
+    text-color:       @text;
+    padding:          8px 10px;
+    spacing:          10px;
+    border:           1px;
+    border-color:     transparent;
+    border-radius:    8px;
+}
+
+element normal.normal,
+element alternate.normal { background-color: transparent; }
+
+element normal.active,
+element alternate.active { text-color: @bright; }
+
+element normal.urgent,
+element alternate.urgent { text-color: #C8836E; }
+
+/* The one place the accent appears. Same recipe as .wifi-active in
+   eww.scss and the ring on the bar: a dim fill, a brighter border, and
+   the label lifted to --ink. */
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color: @accent-dim;
+    border-color:     @accent-brd;
+    text-color:       @bright;
+}
+
+element-icon {
+    size:             24px;
+    background-color: transparent;
+    vertical-align:   0.5;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       inherit;
+    vertical-align:   0.5;
+}
+
+/* ── messages ──────────────────────────────────────────────────── */
+message {
+    background-color: transparent;
+    padding:          2px 0px 0px 0px;
+}
+
+textbox {
+    background-color: @field;
+    text-color:       @text;
+    border:           1px;
+    border-color:     @edge;
+    border-radius:    8px;
+    padding:          9px 11px;
+}
+
+error-message {
+    background-color: transparent;
+    padding:          0px;
+}
+
+error-message textbox {
+    text-color:   #C8836E;
+    border-color: #C8836E57;
+}

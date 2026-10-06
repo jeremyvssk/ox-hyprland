@@ -1,0 +1,34 @@
+#!/bin/sh
+# ═══════════════════════════════════════════════════════════════
+# THE LAUNCHER'S TERMINAL, for Terminal=true apps (nvtop, vim, htop).
+#
+# `gio launch` runs those through the first terminal on GLib's own list,
+# and as of glib 2.88 that list is xdg-terminal-exec, ghostty, ptyxis,
+# gnome-terminal, mate/xfce4-terminal, tilix, konsole and a few X ones --
+# no kitty, foot, alacritty or wezterm. So here nvtop opened in Konsole,
+# and on a machine with only kitty (Hyprland's default) it opened in
+# NOTHING: gio found no terminal and the row did nothing, silently.
+#
+# xdg-terminal-exec is first on that list, and gio calls it as
+# `xdg-terminal-exec CMD ARGS...` -- no -e (measured with a logging stub).
+# apps.py puts this directory at the front of gio's PATH only when the
+# real xdg-terminal-exec is not installed, so a user who has one keeps
+# their choice. gio still does the Exec= field codes; this only picks
+# the terminal: $TERMINAL, then the Super+T one, then the rest.
+# ═══════════════════════════════════════════════════════════════
+
+# Out of the PATH the app inherits: nothing below should find this again.
+here=$(dirname "$0")
+PATH=$(printf %s "$PATH" | tr ':' '\n' | grep -vxF "$here" | paste -sd:)
+export PATH
+
+for t in "$TERMINAL" kitty foot alacritty wezterm ghostty konsole gnome-terminal xfce4-terminal xterm; do
+    [ -n "$t" ] && command -v "$t" >/dev/null 2>&1 || continue
+    case ${t##*/} in
+        kitty|foot)      exec "$t" "$@" ;;
+        wezterm)         exec "$t" start -- "$@" ;;
+        gnome-terminal)  exec "$t" -- "$@" ;;
+        *)               exec "$t" -e "$@" ;;
+    esac
+done
+exit 127

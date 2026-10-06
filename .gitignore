@@ -1,0 +1,35 @@
+# Deny-by-default. ~/.config holds 4.3 GB of application state; only the
+# hand-built desktop shell belongs in here. Add a line to un-ignore, never
+# rely on a blanket rule.
+/*
+
+!/.gitignore
+!/README.md
+!/eww/
+!/hypr/
+!/dunst/
+!/wlogout/
+!/rofi/
+!/quickshell/
+# torbik/ (the retired waybar) is left out on purpose since the public
+# Ox Hyprland repo (2026-10-06): nothing at login loads it any more.
+
+# Residue and generated state — never. These come last so they win over the
+# un-ignores above. `~/` dirs are the XDG bug's leavings (a Brave profile, a
+# VS Code session store, a PulseAudio auth cookie); `backup/` is the by-hand
+# version control this repo replaces.
+**/~/
+**/__pycache__/
+/backup/
+/hypr.old/
+/useless/
+
+# Left out of the public Ox Hyprland repo (2026-10-06), kept on disk.
+# The hyprlang tree is inert since the Lua conversion; its rollback is the
+# old history (branch old-main), not files a reader would mistake for live.
+/hypr/hyprland.conf
+/hypr/conf/*.conf
+# wlogout's suspend and hibernate icons: no button uses them and their
+# origin is unknown. The four in use are Font Awesome Free (CC BY 4.0).
+/wlogout/icons/**/suspend.png
+/wlogout/icons/**/hibernate.png
