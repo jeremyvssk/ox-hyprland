@@ -6,11 +6,11 @@ One small bar sits at the top of the screen. Wi-Fi, Bluetooth, sound, app
 search and your calendar all open out of that bar. The bar itself grows into
 the panel, so there are no separate pop-up windows.
 
-> **Status: preview.** It works, and it is my daily desktop. It is not ready
-> for you to install yet.
+> **Status: preview.** It works, and it is my daily desktop. You can use it
+> now as dotfiles: see [Use it now](#use-it-now).
 >
 > **Full launch: 1 November 2026 (01.11.2026)**, with a settings menu and an
-> install guide.
+> install script that does the setup for you.
 
 <!-- DEMO VIDEO: drop the video file here in GitHub's editor -->
 
@@ -39,12 +39,12 @@ the panel, so there are no separate pop-up windows.
 ## What's coming
 
 **1.0 launches on 1 November 2026** with the settings menu and an install
-guide. The rest of the list is planned, not dated.
+script. The rest of the list is planned, not dated.
 
 | Feature | What it is | Status |
 |---|---|---|
 | **Settings menu** | Customise the desktop from a menu instead of editing config files. | In progress, for 1.0 |
-| **Install guide** | Step-by-step setup on a fresh system. | In progress, for 1.0 |
+| **Install script** | A guided setup from the terminal: it backs up your config and walks you through the rest. | In progress, for 1.0 |
 | **Full-width bar** | In its full size, the bar stretches across the whole top edge of the screen, with CPU, RAM and battery. | Planned |
 | **Power menu in Quickshell** | Lock, log out, restart and shut down, rebuilt to match the bar. Replaces wlogout. | Planned |
 | **Workspace rework** | A new workspace indicator. | Maybe |
@@ -128,6 +128,30 @@ Super+S is a Hyprland global shortcut (`hl.dsp.global("quickshell:search")` in
 letter lands. Check it is registered:
 
     hyprctl globalshortcuts | grep quickshell:search
+
+## Use it now
+
+Until the install script is out, set it up by hand. These are dotfiles: six
+folders that go into `~/.config`.
+
+1. Install everything under [Requirements](#requirements), fonts included.
+2. Move your own config for these programs aside, so you can go back:
+
+       cd ~/.config
+       for d in hypr quickshell eww dunst wlogout rofi; do [ -e "$d" ] && mv "$d" "$d.bak"; done
+
+3. Copy this repo's folders in:
+
+       git clone https://github.com/jeremyvssk/ox-hyprland ~/ox-hyprland
+       cp -r ~/ox-hyprland/{hypr,quickshell,eww,dunst,wlogout,rofi} ~/.config/
+
+4. Set your monitors. The names and modes in `hypr/hyprland.lua` are mine
+   (`HDMI-A-1`, `eDP-1`); `hyprctl monitors` lists yours. `hypr/conf/monitors.sh`
+   turns `eDP-1` off while `HDMI-A-1` is plugged in, so change those names there
+   too. Point `hypr/hyprpaper.conf` at your own wallpaper.
+5. Log out and back in to Hyprland. The bar starts at login.
+
+To go back, delete the six folders and rename the `.bak` ones.
 
 ## Credits
 
